@@ -1,0 +1,152 @@
+
+export PROJECT=$HOME/SaltySanke
+cd $PROJECT
+
+# If you want to build the NaCl modules yourself...
+# Otherwise just skip to the fun part: Calling Python from JavaScript.
+
+# Related work:
+# http://lackingrhoticity.blogspot.com/2009/06/python-standard-library-in-native.html and http://plash.beasts.org/wiki/NativeClient
+# (Got python running but this predates Chrome's PPAPI interface, NaCl's x86-64 sandbox, the newer nacl-glibc port)
+
+################
+# Amazon setup #
+################
+# TODO: how to setup amazon instance + os ??
+# TODO: does gcc imply make?
+sudo yum install make gcc patch
+
+# TODO: check this all still works on amazon
+
+#####################
+# Download nacl_sdk #
+#####################
+
+# See https://developers.google.com/native-client/sdk/download
+
+cd $PROJECT
+curl -O http://commondatastorage.googleapis.com/nativeclient-mirror/nacl/nacl_sdk/nacl_sdk.zip
+unzdip nacl_sdk.zip
+cd nacl_sdk
+./naclsdk update
+# For some reason you have to run this twice.
+./naclsdk update
+
+# TODO: build and test examples
+
+###################
+# Download Python #
+###################
+cd $PROJECT
+
+curl -O http://www.python.org/ftp/python/2.7.2/Python-2.7.2.tar.bz2
+bzip2 -d Python-2.7.2.tar.bz2 
+tar xf Python-2.7.2.tar
+mv Python-2.7.2.tar python_nacl
+
+cd python_nacl
+
+./configure --prefix=$INSTALL_DIR
+
+# Build the host version of python and pgen (parser-generator).
+# TODO: do we really need hostpython? (just for setup.py?)
+
+make python
+mv python hostpython
+mv Parser/pgen Parser/hostpgen
+
+#TODO: comment on
+#strace -e trace=open $TMPBASE/_static/bin/python -c 'print "Hello world from installed python"' 2>&1 | grep -v ENOENT | less 
+
+
+# Apply compliation hacks:
+make distclean
+cp -r $PROJECT/py_patch/* .
+
+  # setup.py   - Don't compile modules. TODO: bad hack. Only need side effects.
+  # Setup.dist - Static compile some modules. TODO: more modules.
+  # Modules/posixmodule.c - HACK stub out code that won't compile. TODO: look for cleaner version. in py27 port?
+  # Note: Cross-compiling patch based on http://randomsplat.com/id5-cross-compiling-python-for-embedded-linux.html
+
+#######################
+# Build x86_32 python #
+#######################
+
+# Install is required for header files. (TODO: And maybe later for modules?)
+INSTALL_DIR=$PROJECT/py32
+
+PEPPER_BIN="$PROJECT/nacl_sdk/pepper_16/toolchain/linux_x86_newlib/bin"
+BUILD_PREFIX="${PEPPER_BIN}/i686-nacl-"
+BUILD_ARCH="i686-nacl"
+# TODO: set for your system.
+HOST_ARCH="x86_64-linux-gnu"
+
+# TODO: is static necessary?
+
+#HACK: removed -m32
+#HACK:   -static-libgcc"  # HACK libgcc?
+#OPT    -O2 -DNDEBUG -g -fwrapv -Wall -Wstrict-prototypes"   -Wno-long-long -pthread
+#HACK: review all of these flags  py27 doesn't use --disable-shared
+#TODO: do I need BLDSHARED?
+#TODO: configure: WARNING: you should use --build, --host, --target
+#TODO: make use of exec_prefix for architecture-dependant files.
+
+./configure --prefix=$INSTALL_DIR  --without-threads --disable-shared \
+    --host=$HOST_ARCH \
+    --build=$BUILD_ARCH \
+    LDFLAGS="-static -static-libgcc" CPPFLAGS="-static" LINKFORSHARED="-Xlinker -no-export-dynamic" \
+    LDLAST="-lnosys" \
+    CC=${BUILD_PREFIX}gcc \
+    CXX=${BUILD_PREFIX}g++ \
+    AR=${BUILD_PREFIX}ar \
+    RANLIB=${BUILD_PREFIX}ranlib \
+    ""
+
+make HOSTPYTHON=./hostpython HOSTPGEN=./Parser/hostpgen BLDSHARED="${BUILD_PREFIX}gcc -static" \
+     CROSS_COMPILE=$BUILD_PREFIX CROSS_COMPILE_TARGET=yes HOSTARCH=$HOST_ARCH BUILDARCH=$BUILD_ARCH install
+
+#######################
+# Build x86_64 python #
+#######################
+
+INSTALL_DIR=$PROJECT/py64
+BUILD_PREFIX="${PEPPER_BIN}/x86_64-nacl-"
+BUILD_ARCH="x86_64-nacl"
+
+make distclean
+# TODO: only difference is -m64
+./configure --prefix=$INSTALL_DIR  --without-threads --disable-shared \
+    --host=$HOST_ARCH \
+    --build=$BUILD_ARCH \
+    BASECFLAGS="-m64" \
+    LDFLAGS="-static -static-libgcc" CPPFLAGS="-static" LINKFORSHARED="-Xlinker -no-export-dynamic" \
+    LDLAST="-lnosys" \
+    CC=${BUILD_PREFIX}gcc \
+    CXX=${BUILD_PREFIX}g++ \
+    AR=${BUILD_PREFIX}ar \
+    RANLIB=${BUILD_PREFIX}ranlib \
+    ""
+make ... install ^^^^ as above.
+
+
+#TODO: what is normal solution for multiple architecutres?
+
+
+
+
+######################
+# Build NaCl Modules #
+######################
+
+cd $PROJECT/app
+make runtest
+#  Should see "Hello from Nacl Python"
+
+#TODO: compile pepper_py
+
+# XXX TODO: more complex app
+# TODO: better icons
+
+
+
+

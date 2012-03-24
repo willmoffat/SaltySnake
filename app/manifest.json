@@ -1,0 +1,14 @@
+{
+  "name": "Salt Python HACK",
+  "description": "Edit and run python code in your browser. HACK",
+  "version": "1",
+  "app": {
+    "launch": {
+      "local_path": "editor.html"
+    }
+  },
+  "icons": {
+    "16":  "assets/icon_16.png",
+    "128": "assets/icon_128.png"
+  }
+}
