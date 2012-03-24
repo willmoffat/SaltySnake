@@ -23,7 +23,7 @@
 #include "ppapi/cpp/var.h"
 #include <pthread.h>
 
-#include "/tmp/p/static/include/python2.7/Python.h"
+#include "Python.h"
 extern int Py_NoSiteFlag;
 
 namespace hello_world {

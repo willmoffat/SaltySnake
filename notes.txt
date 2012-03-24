@@ -144,11 +144,18 @@ make runtest32
 make runtest64
 #  Should see "Hello from Nacl Python"
 
-#TODO: compile pepper_py
+# Compile pepper_py (JS-Python bridge)
+make pepper_py32
+make pepper_py64
+# Plenty of warnings but no errors.
 
-# XXX TODO: more complex app
+
+####################
+# Build Chrome App #
+####################
+
 # TODO: better icons. Check cc-by.
 
-
+# XXX TODO: finish this.
 
 

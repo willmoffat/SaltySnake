@@ -20,11 +20,11 @@ runtest32: test_python_32
 	$(BIN)/ncval_x86_32 build/test_python_x86_32.nexe
 	$(BIN)/sel_ldr_x86_32 -B $(RUNTIME)/irt_core_x86_32.nexe build/test_python_x86_32.nexe
 
-#TODO: add strip, review other flags.
+# Pass --strip-all to the linker to half output size.
 pepper_py64:
-	$(CXX) pepper_py.cc -m64 -o build/pepper_py_x86_64.nexe -lppapi -lppapi_cpp -I$(PY_INCLUDE) $(LIB_PY64) -lnosys
+	$(CXX) pepper_py.cc -m64 -Wl,--strip-all -o build/pepper_py_x86_64.nexe -lppapi -lppapi_cpp -I$(PY_INCLUDE) $(LIB_PY64) -lnosys
 pepper_py32:
-	$(CXX) pepper_py.cc -m32 -o build/pepper_py_x86_32.nexe -lppapi -lppapi_cpp -I$(PY_INCLUDE) $(LIB_PY32) -lnosys
+	$(CXX) pepper_py.cc -m32 -Wl,--strip-all -o build/pepper_py_x86_32.nexe -lppapi -lppapi_cpp -I$(PY_INCLUDE) $(LIB_PY32) -lnosys
 
 
 test_python_32:
