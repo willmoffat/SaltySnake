@@ -1,5 +1,5 @@
 
-export PROJECT=$HOME/SaltySanke
+export PROJECT=$HOME/SaltySnake
 cd $PROJECT
 
 # If you want to build the NaCl modules yourself...
@@ -42,11 +42,11 @@ cd $PROJECT
 curl -O http://www.python.org/ftp/python/2.7.2/Python-2.7.2.tar.bz2
 bzip2 -d Python-2.7.2.tar.bz2 
 tar xf Python-2.7.2.tar
-mv Python-2.7.2.tar python_nacl
+mv Python-2.7.2 python_nacl
 
 cd python_nacl
 
-./configure --prefix=$INSTALL_DIR
+./configure
 
 # Build the host version of python and pgen (parser-generator).
 # TODO: do we really need hostpython? (just for setup.py?)
@@ -55,8 +55,8 @@ make python
 mv python hostpython
 mv Parser/pgen Parser/hostpgen
 
-#TODO: comment on
-#strace -e trace=open $TMPBASE/_static/bin/python -c 'print "Hello world from installed python"' 2>&1 | grep -v ENOENT | less 
+# As an aside, strace is awesome for finding out which files a process requires:
+#strace -e trace=open hostpython -c 'print "Hello world"' 2>&1 | grep -v ENOENT
 
 
 # Apply compliation hacks:
@@ -126,6 +126,7 @@ make distclean
     AR=${BUILD_PREFIX}ar \
     RANLIB=${BUILD_PREFIX}ranlib \
     ""
+
 make ... install ^^^^ as above.
 
 
@@ -139,13 +140,14 @@ make ... install ^^^^ as above.
 ######################
 
 cd $PROJECT/app
-make runtest
+make runtest32
+make runtest64
 #  Should see "Hello from Nacl Python"
 
 #TODO: compile pepper_py
 
 # XXX TODO: more complex app
-# TODO: better icons
+# TODO: better icons. Check cc-by.
 
 
 
