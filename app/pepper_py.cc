@@ -64,13 +64,11 @@ std::string GetResult(const std::string& text) {
   //PyObject * result
   //    = PyDict_GetItemString(dictionary, "result");     // borrowed reference
 
-  std::string result_value = PyString_AsString(output);
-  //printf("HACK: WILL: %s\n", result_value);
-  std::string reversed_string(result_value); // HACK: copy before finalize??
+  std::string result_value("stdout:");
+  result_value.append(PyString_AsString(output));
 
   Py_Finalize();
-  // Use reverse to reverse |reversed_string| in place.
-  return reversed_string;
+  return result_value;
 }
 
 // HACK: Doc difference between instance and module.

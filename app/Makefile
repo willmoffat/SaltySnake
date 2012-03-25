@@ -1,8 +1,20 @@
 # $PROJECT must be defined in your environment
 
+# TODO: There must be better ways to factor out the host and target architectures.
+
+UNAME := $(shell uname)
+ifeq ($(UNAME), Linux)
+  HOST_ARCH=linux
+else ifeq ($(UNAME), Darwin)
+  HOST_ARCH=mac
+else
+  $(error unknown os $(UNAME))
+endif
+
 # For pepper16 - newlib
-BIN=$(PROJECT)/nacl_sdk/pepper_16/toolchain/linux_x86_newlib/bin
-RUNTIME=$(PROJECT)/nacl_sdk/pepper_16/toolchain/linux_x86_newlib/runtime
+
+BIN=$(PROJECT)/nacl_sdk/pepper_16/toolchain/$(HOST_ARCH)_x86_newlib/bin
+RUNTIME=$(PROJECT)/nacl_sdk/pepper_16/toolchain/$(HOST_ARCH)_x86_newlib/runtime
 
 BUILD_PREFIX=$(BIN)/i686-nacl-
 CXX=$(BUILD_PREFIX)g++

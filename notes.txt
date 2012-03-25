@@ -26,13 +26,13 @@ sudo yum install make gcc patch
 
 cd $PROJECT
 curl -O http://commondatastorage.googleapis.com/nativeclient-mirror/nacl/nacl_sdk/nacl_sdk.zip
-unzdip nacl_sdk.zip
+unzip nacl_sdk.zip 
 cd nacl_sdk
 ./naclsdk update
-# For some reason you have to run this twice.
-./naclsdk update
+# Should install pepper_16.
+# For some reason, if you run this again it adds pepper_18.
 
-# TODO: build and test examples
+# Note: consider building and testing the examples.
 
 ###################
 # Download Python #
