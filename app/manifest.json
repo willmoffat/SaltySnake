@@ -4,11 +4,11 @@
   "version": "1",
   "app": {
     "launch": {
-      "local_path": "editor.html"
+      "local_path": "html/editor.html"
     }
   },
   "icons": {
-    "16":  "assets/icon_16.png",
-    "128": "assets/icon_128.png"
+    "16":  "images/icon_16.png",
+    "128": "images/icon_128.png"
   }
 }

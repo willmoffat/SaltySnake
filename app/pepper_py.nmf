@@ -1,6 +1,6 @@
 {
   "program": {
-    "x86-64": {"url": "build/pepper_py_x86_64.nexe"},
-    "x86-32": {"url": "build/pepper_py_x86_32.nexe"}
+    "x86-64": {"url": "nacl_build/pepper_py_x86_64.nexe"},
+    "x86-32": {"url": "nacl_build/pepper_py_x86_32.nexe"}
   }
 }
