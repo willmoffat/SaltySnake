@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<title>Python script tag.</title>
+<body>
+
+<script type="application/x-python">
+for animal in ['Aardvarks', 'Hedgehogs', 'Zebras']:
+  print("<li><em>%s</em> are cool!</li>" % animal)
+</script>
+
+<!-- boiler plate -->
+<embed id="pepper_py" width="0" height="0" src="/pepper_py.nmf" type="application/x-nacl" />
+<script>
+  pepper_py.addEventListener('load', function() {
+    // Once nacl module has loaded, find the python script:
+    var py_tag = document.querySelector('script[type="application/x-python"]');
+
+    // If the output from the nacl_mode is from stderr then add a <pre> tag, otherwise use <div>.
+    pepper_py.addEventListener('message', function(e) {
+      var i = e.data.indexOf(':');
+      var tagname = (e.data.slice(0,i) === 'stderr') ? 'pre' : 'div';
+      var el = document.createElement(tagname);
+      el.innerHTML = e.data.slice(i+1);
+      py_tag.parentNode.appendChild(el);
+    }, true);
+
+    // Eval the python.
+    pepper_py.postMessage('run:' + py_tag.textContent);
+  }, true);
+</script>
+<!-- end boiler plate -->
+
+  
