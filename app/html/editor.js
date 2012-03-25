@@ -7,6 +7,7 @@ function handleMessage(e) {
   var colon = data.indexOf(':');
   var header = data.slice(0,colon);
   var text   = data.slice(colon + 1);
+  if (header == "stderr") { parseError(text); }
   output.className = header;
   output.textContent = text;
 }
@@ -14,6 +15,7 @@ function handleMessage(e) {
 function doRun() {
   var py_code = editor.getSession().getValue();
   output.textContent = 'Running...';
+  editor.getSession().clearAnnotations();
   pepper_py.postMessage('run:'+ py_code);
 }
 
@@ -24,6 +26,7 @@ run.addEventListener('click', doRun, true);
   var editor = ace.edit('input');
 
   editor.renderer.setHScrollBarAlwaysVisible(false);
+  editor.renderer.setShowPrintMargin(false);
 
   editor.setTheme('ace/theme/eclipse');
   var PythonMode = require('ace/mode/python').Mode;
@@ -33,10 +36,34 @@ run.addEventListener('click', doRun, true);
   editor.commands.addCommand({
     name: "run",
     bindKey: {
-        win: "Ctrl-R|Ctrl-Return",
-        mac: "Command-R|Command-Return",
+        win: "Ctrl-Return",
+        mac: "Command-Return",
         sender: "editor"
     },
     exec: doRun
   });
 
+function set_error(row, text) {
+  editor.getSession().setAnnotations(
+    [{row: row,  text: text, column: 0, type: "error" }]
+  );
+  editor.navigateTo(row,80);
+  editor.scrollToLine(row);
+}
+
+function parseError(text) {
+  var lines = text.split('\n');
+  // Throw away last newline.
+  lines.pop();
+  var msg = lines.pop();
+  var match = null;
+  while (!match && lines.length) {
+    var r = /\bline (\d+)\b/.exec(lines.pop());
+    if (r) {
+      var line_num = parseInt(r[1]) - 1;
+      set_error(line_num, msg);
+      return;
+    }
+  }
+  console.error('Could not parse', text);
+}
