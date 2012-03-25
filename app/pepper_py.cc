@@ -33,42 +33,49 @@ const char* const kMsgRun = "run";
 /// Separator character.
 static const char kMessageArgumentSeparator = ':';
 
-
 // HACK: separate python specific parts.
+
 // catcher code
-static char pycode[] = ""
-    "import sys \n"
-    "class StdoutCatcher: \n"
-    "  def __init__(self): \n"
-    "    self.data = '' \n"
-    "  def write(self, stuff): \n"
-    "    self.data = self.data + stuff \n"
-    "catcher = StdoutCatcher() \n"
-    "sys.stdout = catcher \n"
+// Note the hack to subtract the number of lines of this code from tb_lineno.
+static char py_wrapper[] = ""
+    "import sys  \n"
+    ""
+    "class Catcher:  \n"
+    "  def __init__(self): self.data = ''  \n"
+    "  def write(self, d): self.data += d  \n"
+    ""
+    "sys.stdout, sys.stderr = Catcher(), Catcher()  \n"
     "";
+
+// Get data from Catcher attached to "sys.stdout" or "sys.stderr"
+// Returns true if data present.
+bool GetStd(char* stream_name, std::string* result) {
+  PyObject* py_catcher = PySys_GetObject(stream_name);
+  PyObject* py_data    = PyObject_GetAttrString(py_catcher, "data");
+
+  std::string data = PyString_AsString(py_data);
+
+  result->assign(stream_name);
+  result->append(":");
+  result->append(data);
+
+  return !data.empty();
+}
 
 std::string GetResult(const std::string& text) {
   Py_NoSiteFlag = 1;
   Py_Initialize();
 
-  std::string code(pycode);
-  code.append(text);
-  PyRun_SimpleString(code.c_str());
-
-  PyObject * module = PyImport_AddModule("__main__"); // borrowed reference
-
-  PyObject* catcher = PyObject_GetAttrString(module, "catcher");
-  PyObject* output = PyObject_GetAttrString(catcher, "data");
-
-  //PyObject * dictionary = PyModule_GetDict(module);   // borrowed reference
-  //PyObject * result
-  //    = PyDict_GetItemString(dictionary, "result");     // borrowed reference
-
-  std::string result_value("stdout:");
-  result_value.append(PyString_AsString(output));
-
+  std::string result;
+  if (PyRun_SimpleString(py_wrapper) == -1) {
+      result = "stderr:Internal error in py_wrapper";
+  } else {
+      PyRun_SimpleString(text.c_str());
+      // Set result to stderr if not empty, otherwise set to stdout. TODO: send both!
+      GetStd("stderr", &result) || GetStd("stdout", &result);
+  }
   Py_Finalize();
-  return result_value;
+  return result;
 }
 
 // HACK: Doc difference between instance and module.

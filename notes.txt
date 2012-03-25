@@ -156,6 +156,11 @@ make pepper_py64
 
 # TODO: better icons. Check cc-by.
 
-# XXX TODO: finish this.
+# XXX TODOs:
+# * makefile
+# * integrate ace
+# * highlight error line
 
+# * tidy up C++
 
+# Write up: try python in your browser (look no server), pepper_py JS api, compiling your own.
