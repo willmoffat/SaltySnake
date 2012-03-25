@@ -1,0 +1,19 @@
+#input {
+    position: absolute;
+    width: 51em;
+    top: 5em;
+    height: 30em;
+    border: thin solid gray;
+}
+
+#output {
+      position:absolute;
+      width:40%; height:10em;
+      border:thin solid gray;
+      right:1em;
+      padding:0.6em;
+      background-color:linen;
+} 
+
+.stderr { color: red; }
+

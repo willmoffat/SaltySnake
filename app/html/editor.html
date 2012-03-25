@@ -1,3 +1,24 @@
-<h1>To do</h1>
-<a href="minimal_demo.html">Minimal Demo</a>
-<a href="demo_script_tag.html">Script tag demo</a>
+<!DOCTYPE html>
+<html>
+  <title>Python in your browser</title>
+  <link rel="stylesheet" href="editor.css" type="text/css" />
+  <h3>Python in your browser</h3>
+  <div id="input"># This is python!
+for animal in ['Aardvarks', 'Hedgehogs', 'Zebras']:
+  print("%s are cool!" % animal)
+</div>
+
+<br>
+  <textarea id="output" readonly></textarea>
+  <br>
+  <button id="run">Run</button>
+
+  <embed id="pepper_py" width="0" height="0" src="/pepper_py.nmf" type="application/x-nacl" />
+
+
+
+<script src="ace/ace-uncompressed.js"></script>
+<script src="ace/theme-eclipse-uncompressed.js"></script>
+<script src="ace/mode-python-uncompressed.js"></script>
+
+<script src="editor.js"></script>
