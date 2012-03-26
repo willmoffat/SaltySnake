@@ -15,6 +15,7 @@ function handleMessage(e) {
 function doRun() {
   var py_code = editor.getSession().getValue();
   output.textContent = 'Running...';
+  document.getElementById('tip').style.display = 'none';
   editor.getSession().clearAnnotations();
   pepper_py.postMessage('run:'+ py_code);
 }
@@ -67,3 +68,9 @@ function parseError(text) {
   }
   console.error('Could not parse', text);
 }
+
+// It's too easy to lose your work. This is a temporary hack
+// to warn the user.
+window.onbeforeunload = function() {
+  return "--- Python in your Browser ---";
+};

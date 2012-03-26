@@ -1,7 +1,7 @@
 {
-  "name": "Salt Python HACK",
-  "description": "Edit and run python code in your browser. HACK",
-  "version": "1",
+  "name": "Python in your Browser",
+  "description": "Edit and run python code in your browser. HACK: TODO: + See ... for more info.",
+  "version": "1.2",
   "app": {
     "launch": {
       "local_path": "html/editor.html"

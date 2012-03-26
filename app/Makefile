@@ -47,7 +47,5 @@ clean:
 	-find . -name "*~" -or -name "*.nexe" | xargs rm -i
 
 release:
-	rm -rf release app.zip
-	mkdir release
-	cp -r *.nexe *.html *.js *.css src *.json *.png *.nmf release
-	zip -r app.zip release
+	rm -rf app.zip
+	zip -r app.zip html images manifest.json nacl_build/pepper_py_*.nexe pepper_py.nmf -x \*~
