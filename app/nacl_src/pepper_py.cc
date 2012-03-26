@@ -29,6 +29,7 @@ extern int Py_NoSiteFlag;
 namespace hello_world {
 /// Method name for HACK, as seen by JavaScript code.
 const char* const kMsgRun = "run";
+const char* const kMsgStop = "stop";
 
 /// Separator character.
 static const char kMessageArgumentSeparator = ':';
@@ -89,7 +90,9 @@ class HelloWorldInstance : public pp::Instance {
   /// calls the appropriate function.  Posts the result back to the browser
   /// asynchronously.
   /// @param[in] var_message The message posted by the browser.
-  virtual void HandleMessage(const pp::Var& var_message);
+  void HandleMessage(const pp::Var& var_message);
+  void StopPython();
+  void SendError(const std::string& msg);
 
  private:
   pthread_t python_thread_; //HACK: needs a mutex to protect it.
@@ -97,6 +100,7 @@ class HelloWorldInstance : public pp::Instance {
   pp::Var result_; // resulting python output.
   //HACK: must be static?
   static void* RunPython(void* self_);
+
   static void PostMessageResult(void* data, int32_t result);
 };
 
@@ -120,9 +124,33 @@ void* HelloWorldInstance::RunPython(void* self_) {
   return NULL;
 }
 
+// HACK: BUG: aftr stopping first run fails.
+int stop_func(void *) {
+    PyErr_SetInterrupt();
+    return -1;
+}
+
+// http://stackoverflow.com/questions/1420957/stopping-embedded-python
+void HelloWorldInstance::StopPython() {
+    // Compiled without threads, so no PyGILState.
+    // PyGILState_STATE state = PyGILState_Ensure();
+    Py_AddPendingCall(&stop_func, NULL);
+    // TODO: Call SendError from inside stop_func.
+    SendError("Stop");
+    // PyGILState_Release(state);
+}
+
+// Must only be called on main thread.
+void HelloWorldInstance::SendError(const std::string& msg) {
+  std::string err_msg("stderr:");
+  err_msg.append(msg);
+  pp::Var pp_msg(err_msg);
+  PostMessage(pp_msg);
+}
+
 void HelloWorldInstance::HandleMessage(const pp::Var& var_message) {
   if (!var_message.is_string()) {
-    // HACK: SendError('Invalid message: not a string')
+    SendError("Invalid message: not a string");
     return;
   }
   std::string message = var_message.AsString();
@@ -135,8 +163,12 @@ void HelloWorldInstance::HandleMessage(const pp::Var& var_message) {
       python_code_ = string_arg; // HACK: better way to pass arg?
       pthread_create(&python_thread_, NULL, RunPython, this);
     }
+  }
+  else if (message.find(kMsgStop) == 0) {
+      // TODO: pthread_create so that long running stop can't block?
+      StopPython();
   } else {
-    // HACK: SendError('unknown msg');
+    SendError("unknown msg");
   }
 }
 

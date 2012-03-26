@@ -20,6 +20,11 @@ function doRun() {
   pepper_py.postMessage('run:'+ py_code);
 }
 
+function doStop() {
+  output.textContent = 'Stopping...';
+  pepper_py.postMessage('stop');
+}
+
 pepper_py.addEventListener('message', handleMessage, true);
 run.addEventListener('click', doRun, true);
 
@@ -33,15 +38,22 @@ run.addEventListener('click', doRun, true);
   var PythonMode = require('ace/mode/python').Mode;
   editor.getSession().setMode(new PythonMode());
 
-
+  // HACK: TODO: make global to page, not just editor.
   editor.commands.addCommand({
     name: "run",
     bindKey: {
         win: "Ctrl-Return",
-        mac: "Command-Return",
-        sender: "editor"
+        mac: "Command-Return"
     },
     exec: doRun
+  });
+  editor.commands.addCommand({
+    name: "stop",
+    bindKey: {
+        win: "Ctrl-C",  // HACK ??? breaks copy-paste?
+        mac: "Ctrl-C"
+    },
+    exec: doStop
   });
 
 function set_error(row, text) {
