@@ -139,14 +139,14 @@ make ... install ^^^^ as above.
 # Build NaCl Modules #
 ######################
 
-cd $PROJECT/app
+cd $PROJECT/jspy
 make runtest32
 make runtest64
 #  Should see "Hello from Nacl Python"
 
-# Compile pepper_py (JS-Python bridge)
-make pepper_py32
-make pepper_py64
+# Compile jspy (JS-Python bridge)
+make jspy32
+make jspy64
 # Plenty of warnings but no errors.
 
 
@@ -158,14 +158,10 @@ make pepper_py64
 
 # * tidy up C++, review mem use, crashing?
 
-# Write up: try python in your browser (look no server), pepper_py JS api, compiling your own.
+# Write up: try python in your browser (look no server), jspy JS api, compiling your own.
 
 # Note: No diff between py32/include and py64/include.
 
-# xxx TODO: check in pepper_py64 (build on mac)
-# * chrome app release makefile
-
-# XXX TODO: consider spitting pepper_py into seperate dir. It's a resuable component.
 
 
 # TODO: how to detect "NativeClient: NaCl module crashed" in JS?

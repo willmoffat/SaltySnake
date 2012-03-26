@@ -1,5 +1,5 @@
 var output    = document.getElementById('output');
-var pepper_py = document.getElementById('pepper_py');
+var jspy = document.getElementById('jspy');
 var run       = document.getElementById('run');
 
 function handleMessage(e) {
@@ -17,15 +17,15 @@ function doRun() {
   output.textContent = 'Running...';
   document.getElementById('tip').style.display = 'none';
   editor.getSession().clearAnnotations();
-  pepper_py.postMessage('run:'+ py_code);
+  jspy.postMessage('run:'+ py_code);
 }
 
 function doStop() {
   output.textContent = 'Stopping...';
-  pepper_py.postMessage('stop');
+  jspy.postMessage('stop');
 }
 
-pepper_py.addEventListener('message', handleMessage, true);
+jspy.addEventListener('message', handleMessage, true);
 run.addEventListener('click', doRun, true);
 
 

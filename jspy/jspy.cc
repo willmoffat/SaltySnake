@@ -1,19 +1,3 @@
-// Copyright (c) 2011 The Native Client Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-/// @file
-/// This example demonstrates loading, running and scripting a very simple NaCl
-/// module.  To load the NaCl module, the browser first looks for the
-/// CreateModule() factory method (at the end of this file).  It calls
-/// CreateModule() once to load the module code from your .nexe.  After the
-/// .nexe code is loaded, CreateModule() is not called again.
-///
-/// Once the .nexe code is loaded, the browser then calls the
-/// HelloWorldModule::CreateInstance()
-/// method on the object returned by CreateModule().  It calls CreateInstance()
-/// each time it encounters an <embed> tag that references your NaCl module.
-
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -26,7 +10,7 @@
 #include "Python.h"
 extern int Py_NoSiteFlag;
 
-namespace hello_world {
+namespace jspy {
 /// Method name for HACK, as seen by JavaScript code.
 const char* const kMsgRun = "run";
 const char* const kMsgStop = "stop";
@@ -80,10 +64,10 @@ std::string GetResult(const std::string& text) {
 }
 
 // HACK: Doc difference between instance and module.
-class HelloWorldInstance : public pp::Instance {
+class JsPyInstance : public pp::Instance {
  public:
-  explicit HelloWorldInstance(PP_Instance instance) : pp::Instance(instance) {}
-  virtual ~HelloWorldInstance() {}
+  explicit JsPyInstance(PP_Instance instance) : pp::Instance(instance) {}
+  virtual ~JsPyInstance() {}
 
   /// Called by the browser to handle the postMessage() call in Javascript.
   /// Detects which method is being called from the message contents, and
@@ -104,14 +88,14 @@ class HelloWorldInstance : public pp::Instance {
   static void PostMessageResult(void* data, int32_t result);
 };
 
-void HelloWorldInstance::PostMessageResult(void* self_, int32_t dummy) {
-  HelloWorldInstance* self = static_cast<HelloWorldInstance*>(self_);
+void JsPyInstance::PostMessageResult(void* self_, int32_t dummy) {
+  JsPyInstance* self = static_cast<JsPyInstance*>(self_);
   // we are back in the main thread
   self->PostMessage(self->result_);  //HACK: result is type pepper, not python
 }
 
-void* HelloWorldInstance::RunPython(void* self_) {
-  HelloWorldInstance* self = static_cast<HelloWorldInstance*>(self_);
+void* JsPyInstance::RunPython(void* self_) {
+  JsPyInstance* self = static_cast<JsPyInstance*>(self_);
 
   // Actually run the python.
   pp::Var result(GetResult(self->python_code_));
@@ -131,7 +115,7 @@ int stop_func(void *) {
 }
 
 // http://stackoverflow.com/questions/1420957/stopping-embedded-python
-void HelloWorldInstance::StopPython() {
+void JsPyInstance::StopPython() {
     // Compiled without threads, so no PyGILState.
     // PyGILState_STATE state = PyGILState_Ensure();
     Py_AddPendingCall(&stop_func, NULL);
@@ -141,14 +125,14 @@ void HelloWorldInstance::StopPython() {
 }
 
 // Must only be called on main thread.
-void HelloWorldInstance::SendError(const std::string& msg) {
+void JsPyInstance::SendError(const std::string& msg) {
   std::string err_msg("stderr:");
   err_msg.append(msg);
   pp::Var pp_msg(err_msg);
   PostMessage(pp_msg);
 }
 
-void HelloWorldInstance::HandleMessage(const pp::Var& var_message) {
+void JsPyInstance::HandleMessage(const pp::Var& var_message) {
   if (!var_message.is_string()) {
     SendError("Invalid message: not a string");
     return;
@@ -172,35 +156,20 @@ void HelloWorldInstance::HandleMessage(const pp::Var& var_message) {
   }
 }
 
-/// The Module class.  The browser calls the CreateInstance() method to create
-/// an instance of your NaCl module on the web page.  The browser creates a new
-/// instance for each <embed> tag with
-/// <code>type="application/x-nacl"</code>.
-class HelloWorldModule : public pp::Module {
+/// The Module class. Browser creates one singleton.
+class JsPyModule : public pp::Module {
  public:
-  HelloWorldModule() : pp::Module() {}
-  virtual ~HelloWorldModule() {}
-
-  /// Create and return a HelloWorldInstance object.
-  /// @param[in] instance a handle to a plug-in instance.
-  /// @return a newly created HelloWorldInstance.
-  /// @note The browser is responsible for calling @a delete when done.
+  JsPyModule() : pp::Module() {}
+  virtual ~JsPyModule() {}
   virtual pp::Instance* CreateInstance(PP_Instance instance) {
-    return new HelloWorldInstance(instance);
+    return new JsPyInstance(instance);
   }
 };
-}  // namespace hello_world
+}  // namespace jspy
 
 
 namespace pp {
-/// Factory function called by the browser when the module is first loaded.
-/// The browser keeps a singleton of this module.  It calls the
-/// CreateInstance() method on the object you return to make instances.  There
-/// is one instance per <embed> tag on the page.  This is the main binding
-/// point for your NaCl module with the browser.
-/// @return new HelloWorldModule.
-/// @note The browser is responsible for deleting returned @a Module.
 Module* CreateModule() {
-  return new hello_world::HelloWorldModule();
+  return new jspy::JsPyModule();
 }
 }  // namespace pp
