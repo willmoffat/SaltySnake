@@ -156,11 +156,16 @@ make pepper_py64
 
 # TODO: better icons. Check cc-by.
 
-# XXX TODOs:
-# * makefile
-# * integrate ace
-# * highlight error line
-
-# * tidy up C++
+# * tidy up C++, review mem use, crashing?
 
 # Write up: try python in your browser (look no server), pepper_py JS api, compiling your own.
+
+# Note: No diff between py32/include and py64/include.
+
+# xxx TODO: check in pepper_py64 (build on mac)
+# * chrome app release makefile
+
+# XXX TODO: consider spitting pepper_py into seperate dir. It's a resuable component.
+
+
+# TODO: how to detect "NativeClient: NaCl module crashed" in JS?
