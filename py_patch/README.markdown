@@ -6,10 +6,6 @@ Otherwise just skip to the fun part: Calling Python from JavaScript.
     export PROJECT=$HOME/SaltySnake
     cd $PROJECT
 
-## Related work:
-* [lackingrhoticity](http://lackingrhoticity.blogspot.com/2009/06/python-standard-library-in-native.html) ([code](http://plash.beasts.org/wiki/NativeClient)). Got python running but this predates Chrome's PPAPI interface and the sandbox.
-* Cross-compiling patch based on http://randomsplat.com/id5-cross-compiling-python-for-embedded-linux.html.
-
 ## Amazon Linux box.
 If you don't have your own linux box.
 
@@ -133,3 +129,9 @@ TODO: what is normal solution for multiple architecutres?
 ## Testing
 
 See the `jspy/` directory for a simple test to check that your NaCl python library works.
+
+
+## Related work:
+* [lackingrhoticity](http://lackingrhoticity.blogspot.com/2009/06/python-standard-library-in-native.html) ([project](http://plash.beasts.org/wiki/NativeClient)). Got python running but this predates Chrome's PPAPI interface and the sandbox. Could not find build files.
+* Cross-compiling patch based on http://randomsplat.com/id5-cross-compiling-python-for-embedded-linux.html.
+* Partial port by [ashleyh](https://github.com/ashleyh/zoo/tree/master/naclports/ports/py27).
