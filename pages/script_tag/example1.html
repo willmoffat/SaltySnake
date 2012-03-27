@@ -1,0 +1,36 @@
+<html>
+<title>Python Script Tag</title>
+<body>
+<h1>Demo of &lt;script type="text/python"&gt;</h1>
+
+You should view the source of this page!
+
+<!-- Put scripts inside <body> if you want to see the output -->
+<script type="text/python">
+print "<h3>Hello World!</h3>"
+</script>
+
+<hr>
+
+<pre>
+<script type="text/python">
+
+text="SaltySnake"
+for i in range(0, len(text)):
+  print text[0:i+1]
+
+</script>
+</pre>
+
+<hr>
+
+<h3>A deliberate mistake...</h3>
+<script type="text/python">
+
+def oops():
+  if True:
+    pass
+  else
+    print "forgot a colon!"
+
+</script>
