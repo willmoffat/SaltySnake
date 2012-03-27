@@ -24,6 +24,8 @@ CXX=$(BIN)/i686-nacl-g++
 
 LIB_PY32=$(PROJECT)/py32/lib/libpython2.7.a
 LIB_PY64=$(PROJECT)/py64/lib/libpython2.7.a
+
+# There is no diff between py32/include and py64/include.
 PY_INCLUDE=$(PROJECT)/py32/include/python2.7
 
 # TODO: make a proper makefile with clean dependencies etc.
