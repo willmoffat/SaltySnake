@@ -34,14 +34,13 @@ Note: consider building and testing the examples.
     tar xf Python-2.7.2.tar
     mv Python-2.7.2 python_nacl
 
-    cd python_nacl
-
-    ./configure
-
 Build the host version of python and pgen (parser-generator).
 TODO: do we really need hostpython? (just for setup.py?)
 
+    cd $PROJECT/python_nacl
+    ./configure
     make python
+
     mv python hostpython
     mv Parser/pgen Parser/hostpgen
 
