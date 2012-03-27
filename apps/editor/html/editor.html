@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html>
-  <title>Python in your browser</title>
-  <link rel="stylesheet" href="editor.css" type="text/css" />
-  <div id="input"># This is python!
-for animal in ['Aardvarks', 'Hedgehogs', 'Zebras']:
-  print("%s are cool!" % animal)
-</div>
+  <head>
+    <title>Python Editor</title>
+    <link rel="stylesheet" href="editor.css" type="text/css" />
+  </head>
+  <body>
+    <div id="input"></div>
 
-  <button id="run" title="Ctrl-Enter">Run</button>
-  <textarea id="output" readonly></textarea>
-  <div id="tip">Press Ctrl-Enter to execute the python code.</div>
+    <button id="run" title="Ctrl-Enter">Run</button>
+    <textarea id="output" readonly></textarea>
+    <div id="tip">Press Ctrl-Enter to execute the python code.</div>
 
-<embed id="jspy" width="0" height="0" src="/jspy/jspy.nmf" type="application/x-nacl" />
+    <embed id="jspy" width="0" height="0" src="/jspy/jspy.nmf" type="application/x-nacl" />
 
 
 
-<script src="ace/ace-uncompressed.js"></script>
-<script src="ace/theme-eclipse-uncompressed.js"></script>
-<script src="ace/mode-python-uncompressed.js"></script>
+    <script src="ace/ace-uncompressed.js"></script>
+    <script src="ace/theme-eclipse-uncompressed.js"></script>
+    <script src="ace/mode-python-uncompressed.js"></script>
 
-<script src="editor.js"></script>
+    <script src="editor.js"></script>
+  </body>
+</html>

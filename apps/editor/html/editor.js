@@ -1,35 +1,94 @@
-var output    = document.getElementById('output');
-var jspy = document.getElementById('jspy');
-var run       = document.getElementById('run');
+var editor;
+var DEBUG = true;
 
-function handleMessage(e) {
-  var data = e.data;
-  var colon = data.indexOf(':');
-  var header = data.slice(0,colon);
-  var text   = data.slice(colon + 1);
-  if (header == "stderr") { parseError(text); }
-  output.className = header;
-  output.textContent = text;
+var jspy = (function() {
+  var module;
+
+  function send(cmd, data) {
+    var msg = cmd;
+    if (data) {
+      msg += ':' + data;
+    }
+    if (DEBUG) console.log('JSPY.send:', msg);
+    module.postMessage(msg);
+  }
+
+  function receive(e) {
+    var data = e.data;
+    if (DEBUG) console.log('JSPY.receive:', data);
+    var colon = data.indexOf(':');
+    var header = data.slice(0,colon);
+    var text   = data.slice(colon + 1);
+    if (header == "stderr") { parseError(text); }
+      setOutput(text, header);
+    }
+
+    function init() {
+      if (DEBUG) console.log('JSPY.init');
+      module = document.getElementById('jspy');
+      module.addEventListener('load', function() {
+        if (DEBUG) console.log('JSPY.load');
+        // TODO: grey out Run until module is ready.
+      }, true);
+      module.addEventListener('message', receive, true);
+    }
+
+    init();
+
+    return {
+      send: send
+    };
+})();
+
+function setOutput(text, className) {
+  if (DEBUG) console.log('setOutput: ',className, text);
+  var output = document.getElementById('output');
+  output.className = className || '';
+  output.value = text;
 }
 
 function doRun() {
   var py_code = editor.getSession().getValue();
-  output.textContent = 'Running...';
+  setOutput('Running...');
+  localStorage['code'] = py_code;
   document.getElementById('tip').style.display = 'none';
   editor.getSession().clearAnnotations();
-  jspy.postMessage('run:'+ py_code);
+  jspy.send('run', py_code);
 }
 
 function doStop() {
-  output.textContent = 'Stopping...';
-  jspy.postMessage('stop');
+  setOutput('Stopping...');
+  jspy.send('stop');
 }
 
-jspy.addEventListener('message', handleMessage, true);
-run.addEventListener('click', doRun, true);
+//var run    = document.getElementById('run');
+//run.addEventListener('click', doRun, true);
 
+function keyHandler(e) {
+  // Backspace = stop browser-back.
+  if (e.which === 8) {
+    e.preventDefault();
+  }
+  if (e.metaKey || e.ctrlKey) {
+    // Ctrl-Enter = Run.
+    if (e.which === 13) {
+        doRun();
+        e.preventDefault();
+    }
+  }
+}
 
-  var editor = ace.edit('input');
+function init_editor(text) {
+  if (!text) {
+    text = [
+      'def hi(name):',
+      '  print "Hello " + name',
+      '',
+      'for n in ["Alice", "Bob", "Charlie"]:',
+      '  hi(n)'
+      ].join('\n');
+  }
+  editor = ace.edit('input');
 
   editor.renderer.setHScrollBarAlwaysVisible(false);
   editor.renderer.setShowPrintMargin(false);
@@ -37,24 +96,8 @@ run.addEventListener('click', doRun, true);
   editor.setTheme('ace/theme/eclipse');
   var PythonMode = require('ace/mode/python').Mode;
   editor.getSession().setMode(new PythonMode());
-
-  // HACK: TODO: make global to page, not just editor.
-  editor.commands.addCommand({
-    name: "run",
-    bindKey: {
-        win: "Ctrl-Return",
-        mac: "Command-Return"
-    },
-    exec: doRun
-  });
-  editor.commands.addCommand({
-    name: "stop",
-    bindKey: {
-        win: "Ctrl-C",  // HACK ??? breaks copy-paste?
-        mac: "Ctrl-C"
-    },
-    exec: doStop
-  });
+  editor.getSession().setValue(text);
+}
 
 function set_error(row, text) {
   editor.getSession().setAnnotations(
@@ -83,6 +126,10 @@ function parseError(text) {
 
 // It's too easy to lose your work. This is a temporary hack
 // to warn the user.
-window.onbeforeunload = function() {
-  return "--- Python in your Browser ---";
-};
+// window.onbeforeunload = function() {
+//  return "--- Python in your Browser ---";
+//};
+
+init_editor(localStorage['code']);
+window.addEventListener('keydown', keyHandler, true);
+
