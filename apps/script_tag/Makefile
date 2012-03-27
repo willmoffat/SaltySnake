@@ -1,0 +1,19 @@
+ifndef PROJECT
+  $(error PROJECT must be defined)
+endif
+
+JSPY=$(PROJECT)/jspy
+
+# Add the JSPY Nacl module as a flat jspy directory.
+# Do not make local chnages to these files!
+unpacked_app:
+	cp -r $(JSPY)/build    jspy
+	cp    $(JSPY)/jspy.nmf jspy/
+
+EXCLUDE=-x \*~ -x Makefile
+release:
+	zip -r app.zip * $(EXCLUDE)
+	ls -lh app.zip
+
+clean:
+	rm -rf app.zip jspy *~ */*~

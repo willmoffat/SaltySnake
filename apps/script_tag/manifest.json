@@ -1,0 +1,15 @@
+{
+  "name": "<script type='python'>",
+  "description": "Put Python in your HTML pages. HACK: TODO: + See ... for more info.",
+  "version": "0.1",
+  "background_page": "background.html",
+  "content_scripts": [{
+    "matches": ["http://*/*"],
+    "run_at": "document_end",
+    "js": ["python_script_tag.js"]
+  }],
+  "icons": {
+    "16":  "images/icon_16.png",
+    "128": "images/icon_128.png"
+  }
+}
