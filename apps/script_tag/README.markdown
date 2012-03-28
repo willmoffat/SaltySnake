@@ -1,6 +1,6 @@
-# <script type=text/python>
+# Support for `<script type=text/python>`.
 
-This is a Chrome extension that supports <script type=text/python> on any web page.
+This is a Chrome extension that supports `<script type=text/python>` on any web page.
 
 ## To build the app
 
