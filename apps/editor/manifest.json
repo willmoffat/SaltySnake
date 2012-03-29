@@ -8,7 +8,7 @@
     }
   },
   "icons": {
-    "16":  "images/icon_16.png",
-    "128": "images/icon_128.png"
+    "16":  "images/py_16.png",
+    "128": "images/editor_128.png"
   }
 }
