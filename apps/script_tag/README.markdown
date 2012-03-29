@@ -6,6 +6,7 @@ This is a Chrome extension that supports `<script type=text/python>` on any web 
 
 No compliation is required, just copy the `JsPy` module files to the current directory with:
 
+    export PROJECT=$HOME/SaltySnake
     make
 
 ## Installing the app

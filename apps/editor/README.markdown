@@ -1,11 +1,14 @@
 # Python in your Browser
 
-This is a trivial IDE for Python in Chrome.
+Edit and instantly run simple Python code in Chrome. No server required!
+
+Known Limitations: No support for File I/O and `import` modules.
 
 ## To build the app
 
 No compliation is required, just copy the `JsPy` module files to the current directory with:
 
+    export PROJECT=/Users/wdm/SaltySnake
     make
 
 ## Installing the app

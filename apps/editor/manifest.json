@@ -1,7 +1,7 @@
 {
   "name": "Python Editor",
-  "description": "Edit and run python code in your browser.\nNo server required, the Python script is executed in your browser using Native Client.\nLimitations:No file IO - so no Module support.\nSee https://github.com/willmoffat/SaltySnake for more details.",
-  "version": "1.3",
+  "description": "Edit and run python code in your browser.",
+  "version": "1.5",
   "app": {
     "launch": {
       "local_path": "html/editor.html"
