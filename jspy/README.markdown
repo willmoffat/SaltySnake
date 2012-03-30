@@ -29,16 +29,19 @@ You should see plenty of warnings but no errors. TODO: fix warnings.
 
 In a Chrome extensions page:
 
-    <embed id="jspy" src="/jspy/jspy.nmf" type="application/x-nacl" />
-    <script>
-      // Listen for output:
-      jspy.addEventListener('message', function(e) {
-        console.log('JsPy:', e.data);
-      }, true);
+```html
+<embed id="jspy" src="/jspy/jspy.nmf" type="application/x-nacl" />
+<script>
+  // Listen for output:
+  jspy.addEventListener('message', function(e) {
+    console.log('JsPy:', e.data);
+  }, true);
 
-      // To send a command:
-      jspy.postMessage(cmd + ':' + data);
-    </script>
+  // To execute python:
+  var cmd = 'run';
+  var data = 'print "Hello world!"';
+  jspy.postMessage(cmd + ':' + data);
+</script>
 
 See `apps/` for real examples.
 
