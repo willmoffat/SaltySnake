@@ -2,5 +2,3 @@ nacl_sdk
 python_nacl
 py32
 py64
-jspy/build_test
-apps/*/jspy
