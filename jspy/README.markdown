@@ -42,6 +42,7 @@ In a Chrome extensions page:
   var data = 'print "Hello world!"';
   jspy.postMessage(cmd + ':' + data);
 </script>
+```
 
 See `apps/` for real examples.
 
