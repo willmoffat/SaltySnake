@@ -1,0 +1,15 @@
+{
+  "name": "Udacity Helper??",
+  "description": "HACK: TODO: + See ... for more info.",
+  "version": "0.1",
+  "background_page": "background.html",
+  "content_scripts": [{
+    "matches": ["http://www.udacity.com/*"],
+    "run_at": "document_idle",
+    "js": ["ss_content_script.js"]
+  }],
+  "icons": {
+    "16":  "images/icon_16.png",
+    "128": "images/icon_128.png"
+  }
+}
