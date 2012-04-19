@@ -1,27 +1,67 @@
-console.log('HACK ss_content_script START');
-// If the response from the nacl_mode is from stderr then add
-// a <pre> tag, otherwise use <div>.
-function injectResponse(response) {
-  // console.log('Response:', response);
-  var i = response.indexOf(':');
-  var header = response.slice(0,i);
-  var output = response.slice(i+1);
-  if (header == 'stderr') {
-    var el = document.createElement('pre');
-    el.textContent = output;
-    el.style.color = 'red';
-  } else {
-    var el = document.createElement('div');
-    el.innerHTML = output;
-  }
-  var py_tag = document.body.firstChild; // HACK!!
-  py_tag.parentNode.insertBefore(el, py_tag.nextSibling);
-  runNextScript();
+var dom = {};
+
+var currentlyExpanded = false;
+
+var MSG_EMPTY_RESULT = 'Empty result. Did you forget to use "print"?';
+
+function setError(lineNum, msg) {
+  // Not using msg.
+  var script = 'SS.markLine(' + lineNum + ');';
+  injectScript(script);
 }
 
-function runPython(py_code) {
-  chrome.extension.sendRequest(py_code, injectResponse);
+function parseError(text) {
+  var lines = text.split('\n');
+  // Throw away last newline.
+  lines.pop();
+  var msg = lines.pop();
+  var match = null;
+  while (!match && lines.length) {
+    var r = /\bline (\d+)\b/.exec(lines.pop());
+    if (r) {
+      var line_num = parseInt(r[1]) - 1;
+      setError(line_num, msg);
+      return;
+    }
+  }
+  console.error('Could not parse', text);
 }
+
+function showOutput(result) {
+  var out;
+  var className = '';
+  if (result.stderr) {
+    className = 'ssError';
+    out = result.stderr;
+    parseError(result.stderr);
+  } else {
+    out = result.stdout || MSG_EMPTY_RESULT;
+  }
+  var el = document.getElementById('ssOutput');
+  el.textContent = out;
+  el.className = className;
+}
+
+var PyRunner = (function() {
+  var decodeResponse = function(response) {
+    var i = response.indexOf(':');
+    var header = response.slice(0,i);
+    var data   = response.slice(i+1);
+    var result = {};
+    result[header] = data;
+    return result;;
+  };
+
+  var run = function(pyCode, callback) {
+    var wrapper = function(r) { callback(decodeResponse(r)); };
+    chrome.extension.sendRequest(pyCode, wrapper);
+  };
+
+  return { run:run };
+})();
+
+
+
 
 
 function make(tagname, opt_parent, opt_props) {
@@ -35,117 +75,88 @@ function make(tagname, opt_parent, opt_props) {
   return el;
 }
 
-function toArray(list) {
-  return Array.prototype.slice.call(list);
-}
 
-var dom = {
-  editor : null,
-  editorOriginalParent: null,
-  fullscreenStyle : null,
-  topLevelElems : null,
-  topLevelDisplay: null,
-  fullscreenButton: null
-};
-
-function hideTopLevel() {
-  dom.topLevelElems = toArray(document.body.children);
-  dom.topLevelDisplay = dom.topLevelElems.map(function(el) { return el.style.display; });
-  dom.topLevelElems.forEach(function(el) { el.style.display = 'none'; });
-}
-
-function restoreTopLevel() {
-  dom.topLevelElems.forEach(function(el,i) {
-    console.log('setting ', el, ' to ', dom.topLevelDisplay[i]);
-    el.style.display = dom.topLevelDisplay[i];
-  });
-}
-
-function doToggle() {
-  console.log('HACK: toggle!!');
-  if (currentlyFullscreen) {
-    restoreEditor();
-  } else {
-    fullscreenEditor();
-  }
-  currentlyFullscreen = !currentlyFullscreen;
-  updateButtonImage();
-}
-
-
-function fullscreenEditor() {
-  console.log('fullscreenEditor');
-
-  hideTopLevel();
-
-  var css = [
-    '.CodeMirror-scroll {',
-    '  height: auto; ',
-    '  overflow-y: hidden; ',
-    '  overflow-x: auto; ',
-    '  width: 100%; ',
-    '}'].join('\n');
-  dom.fullscreenStyle = make('style', document.body, {textContent:css});
-
-  dom.editor = document.querySelector('.CodeMirror');
+function doExpandEditor() {
+  currentlyExpanded = true;
   dom.editorOriginalParent = dom.editor.parentNode;
   dom.editorNextSibling = dom.editor.nextSibling;
   document.body.appendChild(dom.editor);
 
+  injectScript('SS.focusEditor()');
+
+  document.body.className += ' ssExpanded';
+
   // Bug: Could not get this to work. (Screen just goes blank).
   //dom.editor.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+  //document.webkitCancelFullScreen();
+}
+
+function doContractEditor() {
+  currentlyExpanded = false;
+  dom.editorOriginalParent.insertBefore(dom.editor, dom.editorNextSibling);
+  document.body.className = document.body.className.replace(' ssExpanded', '');
 }
 
 function keyHandler(e) {
-  if (!currentlyFullscreen) return;
+  // Escape toggles
   if (e.which === 27) {
-    doToggle();
+    currentlyExpanded ? doContractEditor() : doExpandEditor();
   }
+
+  // Cmd/Ctrl-Enter runs.
+  if (e.which === 13 && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+    if (!currentlyExpanded) {
+      doExpandEditor();
+    }
+    doRun();
+    e.preventDefault();
+  }
+
+  // No other keys are handled when in contracted mode.
+  // if (!currentlyExpanded) return;
+
 }
 
-// TODO: handle Escape
-function restoreEditor() {
-  console.log('restoreEditor');
-  //document.webkitCancelFullScreen();
-  restoreTopLevel();
-  dom.fullscreenStyle.parentNode.removeChild(dom.fullscreenStyle);
-  dom.editorOriginalParent.insertBefore(dom.editor, dom.editorNextSibling);
-}
-
-var currentlyFullscreen = false;
-
-// TODO: credit http://findicons.com/pack/1688/web_blog.
-function updateButtonImage() {
-  var icon = currentlyFullscreen ?
-               'arrow_contract.png' :
-               'arrow_expand.png';
-  var src = chrome.extension.getURL('/images/' + icon);
-  dom.fullscreenButton.src = src;
-}
-
+// HACK: need state (in flight)
 function doRun() {
-  console.log('RUN');
-  callCommRun();
-  setTimeout(sendToApp, 100);
+  showOutput({stdout:'Running...'});
+  injectScript('SS.run();' );
+  setTimeout(sendToApp, 1);
 }
 
-function addButtonTo(editor) {
-  console.log('ss: Adding button to', editor);
-  dom.fullscreenButton = make('img', editor, {title:'Toggle Fullscreen', onclick:doToggle});
-  dom.fullscreenButton.style.cssText = 'position:absolute; right:7px; top:-7px; z-index:30000; pointer:cursor;';
-  updateButtonImage();
+function sendToApp() {
+  var pyCode = document.getElementById('ssDataNode').textContent;
+  PyRunner.run(pyCode, showOutput);
+}
 
-  dom.runButton = make('button', editor, {textContent:'Run', onclick:doRun});
-  dom.runButton.style.cssText = 'position:absolute; right:50px; top:4px; z-index:30000;';
 
-  setupPageComm();
+function loadFile(filename) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', chrome.extension.getURL(filename), false);
+  xhr.send(null);
+  if (xhr.status !== 200) {
+    console.error('Failed to load ' + filename, xhr);
+  }
+  return xhr.responseText;
+}
+
+function modifyEditor(editor) {
+  dom.editor = editor;
+
+  injectCss(   loadFile('page.css' ));
+  injectHtml(  loadFile('page.html'), editor);
+  injectScript(loadFile('page.js'  ), true);
+
+  document.getElementById('ssRun'           ).addEventListener('click', doRun,            false);
+  document.getElementById('ssButtonExpand'  ).addEventListener('click', doExpandEditor,   false);
+  document.getElementById('ssButtonContract').addEventListener('click', doContractEditor, false);
+  document.addEventListener('keydown', keyHandler, false);
 }
 
 function waitForEditor() {
-  var cm = document.querySelector('.CodeMirror');
-  if (cm) {
-    addButtonTo(cm);
-    document.addEventListener('keydown', keyHandler, false);
+  var editor = document.querySelector('.CodeMirror');
+  if (editor) {
+    modifyEditor(editor);
   } else {
     console.log('.');
     window.setTimeout(waitForEditor, 300);
@@ -160,55 +171,26 @@ function init() {
 
 init();
 
-console.log('HACK ss_content_script END');
-
-/*
-
-
-assignment.getCode());
-
-
- */
-
-
-var prefix = 'ss';  // Must be unique on page.
-var dataNodeId     = prefix + '-data';  // Shared dom node between page and content scripts.
-var kGetEditorCode = prefix + 'Run';    // Injected function to update data node.
-
-function injectScript(code) {
-  // TODO: reuse make
-  var script = document.createElement('script');
-  script.textContent = code;
-  document.head.appendChild(script);
-  // setTimeout(function() { document.head.removeChild(script); }, 100);
-}
-
-function setupPageComm() {
-  if (!document.getElementById(dataNodeId)) {
-    // use HACK make!
-    var div = document.createElement('pre');
-    div.id = dataNodeId;
-    div.textContent = 'null data 2';
-    // TODO: display none
-    document.body.appendChild(div);
-
-    var code = [
-      'window.' + kGetEditorCode + ' = function() { ',
-      '  val = App.current_nugget_controller.get("currentAssignment").getCode(); ',
-      '  document.getElementById("' + dataNodeId + '").textContent = val; ',
-      '}; '
-    ].join('\n');
-
-    injectScript(code);
+function injectScript(code, keep) {
+  var script = make('script', document.head, {textContent:code});
+  if (!keep) {
+    setTimeout(function() { document.head.removeChild(script); }, 100);
   }
 }
 
-function callCommRun() {
-  injectScript('window.' + kGetEditorCode + '();' );
+function injectCss(css) {
+  make('style', document.head, {textContent:css});
 }
 
-function sendToApp() {
-  var pyCode = document.getElementById(dataNodeId).textContent;
-  console.log('HACK: ', pyCode);
-  runPython(pyCode);
+function injectHtml(html, parent) {
+  var BASEURL = chrome.extension.getURL('');
+  html = html.replace(/BASEURL/g, BASEURL);
+
+  var dummy = make('div', null, {innerHTML:html});
+
+  var fragment = document.createDocumentFragment();
+  while(dummy.firstChild) {
+    fragment.appendChild(dummy.firstChild);
+  }
+  parent.appendChild(fragment);
 }
