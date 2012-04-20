@@ -1,7 +1,5 @@
 TODO
 
-* better layout
-
 * support timeout
 * syntax checking
 
@@ -13,6 +11,7 @@ TODO
 
 Maybe
 
+* Putscroll bars around editor. (rather than right of page and bottom of code).
 * BUG: grab new codemirror if editor changes
 * ?run on contract if dirty? (to save)
 * date + time to run
@@ -22,3 +21,4 @@ DONE
 * remove autorun
 * empty response -> no output
 * line numbers for error - reset before run
+* better layout

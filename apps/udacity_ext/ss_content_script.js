@@ -1,3 +1,5 @@
+var DEBUG = true;
+
 var dom = {};
 
 var currentlyExpanded = false;
@@ -42,7 +44,17 @@ function showOutput(result) {
   el.className = className;
 }
 
+function elide(str) {
+  if (str.length<80) return str;
+  return str.slice(0,80) + '...';
+}
+
 var PyRunner = (function() {
+  var state = {
+    running: false,
+    stopping: false
+  };
+
   var decodeResponse = function(response) {
     var i = response.indexOf(':');
     var header = response.slice(0,i);
@@ -52,16 +64,55 @@ var PyRunner = (function() {
     return result;;
   };
 
-  var run = function(pyCode, callback) {
-    var wrapper = function(r) { callback(decodeResponse(r)); };
-    chrome.extension.sendRequest(pyCode, wrapper);
+  var send = function(cmd, data, callback) {
+    var msg = cmd;
+    if (data) {
+      msg += ':' + data;
+    }
+    if (DEBUG) console.log('JSPY.send:', elide(msg));
+    chrome.extension.sendRequest(msg, callback);
   };
 
-  return { run:run };
+  var init = function(callback) {
+    send('init', null, callback);
+  };
+
+  var run = function(pyCode, callback) {
+    if (state.running) {
+      stop(function() { run(pyCode, callback); });
+    }
+    state.running = true;
+    var wrapper = function(r) {
+      state.running = false;
+      callback(decodeResponse(r));
+    };
+    send('run', pyCode, wrapper);
+  };
+
+  var stop = function(callback) {
+    if (DEBUG) console.log('JSPY: stop');
+    if (state.stopping) {
+      console.error('Already stopping!');
+      return;
+    }
+    state.stopping = true;
+    var stop_cb = function(response) {
+      if (DEBUG) console.log('JSPY stopped', response);
+      // There is a bug in the JsPy module that causes the next 'run' command to fail.
+      // so send a dummy program. TODO: fix this!
+      // Once this has (failed to) execute, JsPy is back to normal.
+      var dummyCode = 'True';
+      var stop_cb2 = function() {
+        state.stopping = false;
+        callback();
+      };
+      send('run', dummyCode, stop_cb2);
+    };
+    send('stop', null, stop_cb);
+  };
+
+  return { init:init, run:run, stop:stop };
 })();
-
-
-
 
 
 function make(tagname, opt_parent, opt_props) {
@@ -86,9 +137,7 @@ function doExpandEditor() {
 
   document.body.className += ' ssExpanded';
 
-  // Bug: Could not get this to work. (Screen just goes blank).
-  //dom.editor.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-  //document.webkitCancelFullScreen();
+  PyRunner.init(function() { console.log('SS JsPy loaded.'); });
 }
 
 function doContractEditor() {
@@ -103,21 +152,17 @@ function keyHandler(e) {
     currentlyExpanded ? doContractEditor() : doExpandEditor();
   }
 
+  // No other keys are handled when in contracted mode.
+  if (!currentlyExpanded) return;
+
   // Cmd/Ctrl-Enter runs.
   if (e.which === 13 && (e.metaKey || e.ctrlKey || e.shiftKey)) {
-    if (!currentlyExpanded) {
-      doExpandEditor();
-    }
     doRun();
     e.preventDefault();
   }
 
-  // No other keys are handled when in contracted mode.
-  // if (!currentlyExpanded) return;
-
 }
 
-// HACK: need state (in flight)
 function doRun() {
   showOutput({stdout:'Running...'});
   injectScript('SS.run();' );
@@ -147,7 +192,7 @@ function modifyEditor(editor) {
   injectHtml(  loadFile('page.html'), editor);
   injectScript(loadFile('page.js'  ), true);
 
-  document.getElementById('ssRun'           ).addEventListener('click', doRun,            false);
+  document.getElementById('ssButtonRun'     ).addEventListener('click', doRun,            false);
   document.getElementById('ssButtonExpand'  ).addEventListener('click', doExpandEditor,   false);
   document.getElementById('ssButtonContract').addEventListener('click', doContractEditor, false);
   document.addEventListener('keydown', keyHandler, false);
@@ -158,13 +203,13 @@ function waitForEditor() {
   if (editor) {
     modifyEditor(editor);
   } else {
-    console.log('.');
+    if (DEBUG) console.log('.');
     window.setTimeout(waitForEditor, 300);
   }
 }
 
 function init() {
-  console.log('init');
+  if (DEBUG) console.log('SS:init');
   window.onerror = null; // Kill the Udacity error supressor.
   waitForEditor();
 }

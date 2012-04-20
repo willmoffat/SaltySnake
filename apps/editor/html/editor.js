@@ -25,7 +25,11 @@ var jspy = (function() {
 
     function init() {
       if (DEBUG) console.log('JSPY.init');
-      module = document.getElementById('jspy');
+      module = document.createElement('embed');
+      module.src = '/jspy/jspy.nmf';
+      module.type = 'application/x-nacl';
+      document.body.appendChild(module);
+
       module.addEventListener('load', function() {
         if (DEBUG) console.log('JSPY.load');
         // TODO: grey out Run until module is ready.
