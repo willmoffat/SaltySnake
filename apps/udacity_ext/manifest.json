@@ -1,6 +1,6 @@
 {
-  "name": "Udacity Helper??",
-  "description": "HACK: TODO: + See ... for more info.",
+  "name": "Udacity CS101 Helper",
+  "description": "Expand the Udacity code editor to full screen and run Python super fast in Chrome.",
   "version": "0.1",
   "background": {
     "scripts": ["background.js"]

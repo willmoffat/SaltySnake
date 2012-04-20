@@ -2,7 +2,7 @@
 
 var jspy;
 
-var DEBUG = true;
+var DEBUG = false;
 
 var waiting_callback;
 

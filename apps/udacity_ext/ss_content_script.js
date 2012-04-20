@@ -1,4 +1,4 @@
-var DEBUG = true;
+var DEBUG = false;
 
 var dom = {};
 
@@ -198,20 +198,19 @@ function modifyEditor(editor) {
   document.addEventListener('keydown', keyHandler, false);
 }
 
-function waitForEditor() {
+function watchForEditor() {
   var editor = document.querySelector('.CodeMirror');
-  if (editor) {
+  if (editor && editor !== dom.editor) {
     modifyEditor(editor);
-  } else {
-    if (DEBUG) console.log('.');
-    window.setTimeout(waitForEditor, 300);
   }
+  if (DEBUG) console.log('.');
+  window.setTimeout(watchForEditor, 500);
 }
 
 function init() {
   if (DEBUG) console.log('SS:init');
-  window.onerror = null; // Kill the Udacity error supressor.
-  waitForEditor();
+  if (DEBUG) window.onerror = null; // Kill the Udacity error supressor.
+  watchForEditor();
 }
 
 init();
